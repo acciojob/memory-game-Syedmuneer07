@@ -1,1 +1,30 @@
+.levels_container {
+  margin-bottom: 20px;
+}
+
+.cells_container {
+  display: grid;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  background: #444;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cell.open {
+  background: green;
+}
+
+.cell.matched {
+  background: gray;
+  pointer-events: none;
+}
 
