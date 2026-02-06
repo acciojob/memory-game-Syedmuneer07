@@ -2,93 +2,89 @@ import React, { useState } from "react";
 import "./App.css";
 
 const LEVELS = {
-  easy: { tiles: 8, pairs: 4, cols: 4 },
-  normal: { tiles: 16, pairs: 8, cols: 4 },
-  hard: { tiles: 32, pairs: 16, cols: 8 }
+  easy: { pairs: 4, cols: 4 },
+  normal: { pairs: 8, cols: 4 },
+  hard: { pairs: 16, cols: 8 }
 };
 
 function App() {
   const [level, setLevel] = useState("easy");
   const [cells, setCells] = useState([]);
   const [first, setFirst] = useState(null);
-  const [second, setSecond] = useState(null);
   const [attempts, setAttempts] = useState(0);
   const [matched, setMatched] = useState(0);
   const [lock, setLock] = useState(false);
 
   const startGame = () => {
     const { pairs } = LEVELS[level];
-    let numbers = [];
+    let nums = [];
 
     for (let i = 1; i <= pairs; i++) {
-      numbers.push(i, i);
+      nums.push(i, i);
     }
 
-    numbers = shuffle(numbers);
+    nums = shuffle(nums);
 
     setCells(
-      numbers.map((num, idx) => ({
-        id: idx,
-        value: num,
+      nums.map((n, i) => ({
+        id: i,
+        value: n,
         revealed: false,
         matched: false
       }))
     );
 
-    setFirst(null);
-    setSecond(null);
     setAttempts(0);
     setMatched(0);
+    setFirst(null);
     setLock(false);
   };
 
-  const handleClick = (index) => {
+  const handleClick = (i) => {
     if (lock) return;
 
-    const newCells = [...cells];
-    const cell = newCells[index];
+    const copy = [...cells];
+    const cell = copy[i];
 
     if (cell.revealed || cell.matched) return;
 
     cell.revealed = true;
-    setCells(newCells);
+    setCells(copy);
 
-    if (!first) {
-      setFirst(index);
+    if (first === null) {
+      setFirst(i);
       return;
     }
 
-    setSecond(index);
-    setAttempts((a) => a + 1);
+    setAttempts(a => a + 1);
     setLock(true);
 
-    if (newCells[first].value === cell.value) {
-      newCells[first].matched = true;
+    if (copy[first].value === cell.value) {
+      copy[first].matched = true;
       cell.matched = true;
-      setCells(newCells);
-      setMatched((m) => m + 1);
-      resetTurn();
+      setMatched(m => m + 1);
+      setCells(copy);
+      reset();
     } else {
       setTimeout(() => {
-        newCells[first].revealed = false;
+        copy[first].revealed = false;
         cell.revealed = false;
-        setCells(newCells);
-        resetTurn();
-      }, 700);
+        setCells(copy);
+        reset();
+      }, 600);
     }
   };
 
-  const resetTurn = () => {
+  const reset = () => {
     setFirst(null);
-    setSecond(null);
     setLock(false);
   };
 
   return (
-    <div className="app">
+    <div>
       <h1>Memory Game</h1>
 
-      {/* LEVEL SELECTION */}
+      {/* LEVELS */}
       <div className="levels_container">
         <label>
           <input
@@ -126,22 +122,20 @@ function App() {
         <button onClick={startGame}>Start Game</button>
       </div>
 
-      {/* GAME GRID */}
+      {/* GRID */}
       <div
         className="cells_container"
-        style={{
-          gridTemplateColumns: `repeat(${LEVELS[level].cols}, 1fr)`
-        }}
+        style={{ gridTemplateColumns: `repeat(${LEVELS[level].cols}, 1fr)` }}
       >
-        {cells.map((cell, index) => (
+        {cells.map((c, i) => (
           <div
-            key={cell.id}
-            className={`cell ${
-              cell.revealed ? "revealed" : ""
-            } ${cell.matched ? "matched" : ""}`}
-            onClick={() => handleClick(index)}
+            key={c.id}
+            className={`cell ${c.revealed ? "revealed" : ""} ${
+              c.matched ? "matched" : ""
+            }`}
+            onClick={() => handleClick(i)}
           >
-            {cell.revealed || cell.matched ? cell.value : ""}
+            {c.revealed || c.matched ? c.value : ""}
           </div>
         ))}
       </div>
@@ -149,7 +143,7 @@ function App() {
       <p id="attempts">Attempts: {attempts}</p>
 
       {matched === LEVELS[level].pairs && cells.length > 0 && (
-        <h2>🎉 All Solved!</h2>
+        <h2>All Solved</h2>
       )}
     </div>
   );
