@@ -2,79 +2,77 @@ import React, { useState } from "react";
 import "./App.css";
 
 const LEVELS = {
-  easy: 4,
-  normal: 8,
-  hard: 16
+  easy: { tiles: 8, pairs: 4, cols: 4 },
+  normal: { tiles: 16, pairs: 8, cols: 4 },
+  hard: { tiles: 32, pairs: 16, cols: 8 }
 };
 
 function App() {
-  const [level, setLevel] = useState(null);
+  const [level, setLevel] = useState("easy");
   const [cells, setCells] = useState([]);
   const [first, setFirst] = useState(null);
   const [second, setSecond] = useState(null);
+  const [attempts, setAttempts] = useState(0);
+  const [matched, setMatched] = useState(0);
   const [lock, setLock] = useState(false);
-  const [matchedPairs, setMatchedPairs] = useState(0);
 
   const startGame = () => {
-    const pairs = LEVELS[level];
+    const { pairs } = LEVELS[level];
     let numbers = [];
 
     for (let i = 1; i <= pairs; i++) {
       numbers.push(i, i);
     }
 
-    numbers = numbers.sort(() => Math.random() - 0.5);
+    numbers = shuffle(numbers);
 
     setCells(
       numbers.map((num, idx) => ({
         id: idx,
         value: num,
-        open: false,
+        revealed: false,
         matched: false
       }))
     );
 
     setFirst(null);
     setSecond(null);
-    setMatchedPairs(0);
+    setAttempts(0);
+    setMatched(0);
     setLock(false);
   };
 
-  const handleClick = (cell) => {
-    if (lock || cell.open || cell.matched) return;
+  const handleClick = (index) => {
+    if (lock) return;
 
-    const updated = cells.map(c =>
-      c.id === cell.id ? { ...c, open: true } : c
-    );
-    setCells(updated);
+    const newCells = [...cells];
+    const cell = newCells[index];
+
+    if (cell.revealed || cell.matched) return;
+
+    cell.revealed = true;
+    setCells(newCells);
 
     if (!first) {
-      setFirst(cell);
+      setFirst(index);
       return;
     }
 
-    setSecond(cell);
-    checkMatch(cell);
-  };
-
-  const checkMatch = (secondCell) => {
+    setSecond(index);
+    setAttempts((a) => a + 1);
     setLock(true);
 
-    if (first.value === secondCell.value) {
-      setCells(prev =>
-        prev.map(c =>
-          c.value === first.value ? { ...c, matched: true } : c
-        )
-      );
-      setMatchedPairs(p => p + 1);
+    if (newCells[first].value === cell.value) {
+      newCells[first].matched = true;
+      cell.matched = true;
+      setCells(newCells);
+      setMatched((m) => m + 1);
       resetTurn();
     } else {
       setTimeout(() => {
-        setCells(prev =>
-          prev.map(c =>
-            c.matched ? c : { ...c, open: false }
-          )
-        );
+        newCells[first].revealed = false;
+        cell.revealed = false;
+        setCells(newCells);
         resetTurn();
       }, 700);
     }
@@ -87,14 +85,17 @@ function App() {
   };
 
   return (
-    <div>
-      {/* LANDING / LEVEL SELECTION */}
+    <div className="app">
+      <h1>Memory Game</h1>
+
+      {/* LEVEL SELECTION */}
       <div className="levels_container">
         <label>
           <input
             type="radio"
             id="easy"
             name="level"
+            checked={level === "easy"}
             onChange={() => setLevel("easy")}
           />
           Easy
@@ -105,9 +106,10 @@ function App() {
             type="radio"
             id="normal"
             name="level"
+            checked={level === "normal"}
             onChange={() => setLevel("normal")}
           />
-          Medium
+          Normal
         </label>
 
         <label>
@@ -115,38 +117,51 @@ function App() {
             type="radio"
             id="hard"
             name="level"
+            checked={level === "hard"}
             onChange={() => setLevel("hard")}
           />
           Hard
         </label>
 
-        <button onClick={startGame}>Start</button>
+        <button onClick={startGame}>Start Game</button>
       </div>
 
       {/* GAME GRID */}
       <div
         className="cells_container"
         style={{
-          gridTemplateColumns: `repeat(${Math.sqrt(cells.length)}, 1fr)`
+          gridTemplateColumns: `repeat(${LEVELS[level].cols}, 1fr)`
         }}
       >
-        {cells.map(cell => (
+        {cells.map((cell, index) => (
           <div
             key={cell.id}
-            className={`cell ${cell.open ? "open" : ""} ${cell.matched ? "matched" : ""}`}
-            onClick={() => handleClick(cell)}
+            className={`cell ${
+              cell.revealed ? "revealed" : ""
+            } ${cell.matched ? "matched" : ""}`}
+            onClick={() => handleClick(index)}
           >
-            {cell.open || cell.matched ? cell.value : ""}
+            {cell.revealed || cell.matched ? cell.value : ""}
           </div>
         ))}
       </div>
 
-      {/* ALL SOLVED STATE */}
-      {matchedPairs > 0 && matchedPairs === LEVELS[level] && (
-        <h3>All Solved</h3>
+      <p id="attempts">Attempts: {attempts}</p>
+
+      {matched === LEVELS[level].pairs && cells.length > 0 && (
+        <h2>🎉 All Solved!</h2>
       )}
     </div>
   );
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 export default App;
