@@ -13,18 +13,18 @@
   height: 60px;
   background: #444;
   color: white;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 }
 
-.cell.open {
-  background: green;
+.cell.revealed {
+  background: #2ecc71;
 }
 
 .cell.matched {
-  background: gray;
-  pointer-events: none;
+  background: #3498db;
+  cursor: default;
 }
-
