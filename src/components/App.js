@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "./App.css";
 
 const LEVELS = {
   easy: { pairs: 4, cols: 4 },
@@ -16,19 +15,17 @@ function App() {
   const [lock, setLock] = useState(false);
 
   const startGame = () => {
-    const { pairs } = LEVELS[level];
-    let nums = [];
-
-    for (let i = 1; i <= pairs; i++) {
+    const nums = [];
+    for (let i = 1; i <= LEVELS[level].pairs; i++) {
       nums.push(i, i);
     }
 
-    nums = shuffle(nums);
+    shuffle(nums);
 
     setCells(
-      nums.map((n, i) => ({
+      nums.map((v, i) => ({
         id: i,
-        value: n,
+        value: v,
         revealed: false,
         matched: false
       }))
@@ -71,7 +68,7 @@ function App() {
         cell.revealed = false;
         setCells(copy);
         reset();
-      }, 600);
+      }, 500);
     }
   };
 
@@ -84,7 +81,7 @@ function App() {
     <div>
       <h1>Memory Game</h1>
 
-      {/* LEVELS */}
+      {/* Level selection */}
       <div className="levels_container">
         <label>
           <input
@@ -122,17 +119,35 @@ function App() {
         <button onClick={startGame}>Start Game</button>
       </div>
 
-      {/* GRID */}
+      {/* Game grid */}
       <div
         className="cells_container"
-        style={{ gridTemplateColumns: `repeat(${LEVELS[level].cols}, 1fr)` }}
+        style={{
+          display: "grid",
+          gap: "10px",
+          justifyContent: "center",
+          gridTemplateColumns: `repeat(${LEVELS[level].cols}, 60px)`
+        }}
       >
         {cells.map((c, i) => (
           <div
             key={c.id}
-            className={`cell ${c.revealed ? "revealed" : ""} ${
-              c.matched ? "matched" : ""
-            }`}
+            className="cell"
+            style={{
+              width: "60px",
+              height: "60px",
+              background: c.matched
+                ? "#3498db"
+                : c.revealed
+                ? "#2ecc71"
+                : "#444",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: "18px"
+            }}
             onClick={() => handleClick(i)}
           >
             {c.revealed || c.matched ? c.value : ""}
@@ -150,12 +165,10 @@ function App() {
 }
 
 function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return a;
 }
 
 export default App;
