@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 
 const LEVELS = {
-  easy: { pairs: 4, cols: 4 },
-  normal: { pairs: 8, cols: 4 },
-  hard: { pairs: 16, cols: 8 }
+  easy: { tiles: 8, pairs: 4, cols: 4 },
+  normal: { tiles: 16, pairs: 8, cols: 4 },
+  hard: { tiles: 32, pairs: 16, cols: 8 }
 };
 
-function App() {
+export default function App() {
   const [level, setLevel] = useState("easy");
+  const [started, setStarted] = useState(false);
   const [cells, setCells] = useState([]);
   const [first, setFirst] = useState(null);
   const [attempts, setAttempts] = useState(0);
@@ -35,13 +36,14 @@ function App() {
     setMatched(0);
     setFirst(null);
     setLock(false);
+    setStarted(true);
   };
 
-  const handleClick = (i) => {
+  const onTileClick = (index) => {
     if (lock) return;
 
     const copy = [...cells];
-    const cell = copy[i];
+    const cell = copy[index];
 
     if (cell.revealed || cell.matched) return;
 
@@ -49,7 +51,7 @@ function App() {
     setCells(copy);
 
     if (first === null) {
-      setFirst(i);
+      setFirst(index);
       return;
     }
 
@@ -61,27 +63,34 @@ function App() {
       cell.matched = true;
       setMatched(m => m + 1);
       setCells(copy);
-      reset();
+      resetTurn();
     } else {
       setTimeout(() => {
         copy[first].revealed = false;
         cell.revealed = false;
         setCells(copy);
-        reset();
-      }, 500);
+        resetTurn();
+      }, 600);
     }
   };
 
-  const reset = () => {
+  const resetTurn = () => {
     setFirst(null);
     setLock(false);
   };
 
   return (
     <div>
-      <h1>Memory Game</h1>
+      {!started && <h1>Welcome!</h1>}
 
-      {/* Level selection */}
+      {started && (
+        <h4>
+          {level === "easy" && "Easy Mode"}
+          {level === "normal" && "Normal Mode"}
+          {level === "hard" && "Hard Mode"}
+        </h4>
+      )}
+
       <div className="levels_container">
         <label>
           <input
@@ -119,45 +128,46 @@ function App() {
         <button onClick={startGame}>Start Game</button>
       </div>
 
-      {/* Game grid */}
-      <div
-        className="cells_container"
-        style={{
-          display: "grid",
-          gap: "10px",
-          justifyContent: "center",
-          gridTemplateColumns: `repeat(${LEVELS[level].cols}, 60px)`
-        }}
-      >
-        {cells.map((c, i) => (
-          <div
-            key={c.id}
-            className="cell"
-            style={{
-              width: "60px",
-              height: "60px",
-              background: c.matched
-                ? "#3498db"
-                : c.revealed
-                ? "#2ecc71"
-                : "#444",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              fontSize: "18px"
-            }}
-            onClick={() => handleClick(i)}
-          >
-            {c.revealed || c.matched ? c.value : ""}
-          </div>
-        ))}
-      </div>
+      {started && (
+        <div
+          className="cells_container"
+          style={{
+            display: "grid",
+            gap: "10px",
+            justifyContent: "center",
+            gridTemplateColumns: `repeat(${LEVELS[level].cols}, 60px)`
+          }}
+        >
+          {cells.map((c, i) => (
+            <div
+              key={c.id}
+              className="cell"
+              onClick={() => onTileClick(i)}
+              style={{
+                width: "60px",
+                height: "60px",
+                background: c.matched
+                  ? "#3498db"
+                  : c.revealed
+                  ? "#2ecc71"
+                  : "#444",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: "18px"
+              }}
+            >
+              {c.revealed || c.matched ? c.value : ""}
+            </div>
+          ))}
+        </div>
+      )}
 
-      <p id="attempts">Attempts: {attempts}</p>
+      {started && <p id="attempts">Attempts: {attempts}</p>}
 
-      {matched === LEVELS[level].pairs && cells.length > 0 && (
+      {matched === LEVELS[level].pairs && started && (
         <h2>All Solved</h2>
       )}
     </div>
@@ -170,5 +180,3 @@ function shuffle(arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
-
-export default App;
